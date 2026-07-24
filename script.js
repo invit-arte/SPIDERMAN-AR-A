@@ -2,68 +2,66 @@
   document.addEventListener("DOMContentLoaded", () => {
   const target = document.querySelector("#target");
   const video = document.querySelector("#videoAR");
-  const pantallaVideo = document.querySelector("#pantallaVideo");
   const mensaje = document.querySelector("#mensaje");
   const botonInvisible = document.querySelector("#botonInvisible");
 
-  let videoIniciado = false;
+  let videoDesbloqueado = false;
+  let targetDetectado = false;
 
   video.muted = true;
   video.defaultMuted = true;
   video.playsInline = true;
-  video.loop = true;
 
-  const iniciarVideo = async () => {
+  async function desbloquearVideo() {
     try {
-      /*
-        Se inicia con el toque del usuario.
-        No lo pausamos después.
-      */
       await video.play();
 
-      videoIniciado = true;
-
+      videoDesbloqueado = true;
       botonInvisible.style.display = "none";
 
-      mensaje.style.display = "block";
       mensaje.textContent =
         "Apunta la cámara hacia la tarjeta de Alejandro";
 
-      console.log("Video habilitado correctamente");
+      if (!targetDetectado) {
+        video.pause();
+        video.currentTime = 0;
+      } else {
+        mensaje.style.display = "none";
+      }
+
+      console.log("Video desbloqueado");
     } catch (error) {
-      console.error("No se pudo iniciar el video:", error);
-
-      /*
-        No ocultamos el botón para que pueda intentarlo nuevamente.
-      */
-      mensaje.style.display = "block";
-      mensaje.textContent =
-        "Toca nuevamente la pantalla para iniciar";
+      console.error("No se pudo desbloquear el video:", error);
     }
-  };
+  }
 
-  /*
-    pointerdown suele funcionar mejor que click en celulares.
-    No usamos once:true, porque si falla puede intentarse otra vez.
-  */
-  botonInvisible.addEventListener("pointerdown", iniciarVideo);
+  botonInvisible.addEventListener("click", desbloquearVideo);
+  botonInvisible.addEventListener("touchend", desbloquearVideo);
 
-  target.addEventListener("targetFound", () => {
-    if (!videoIniciado) {
-      mensaje.style.display = "block";
-      mensaje.textContent =
-        "Toca una vez la pantalla para iniciar";
+  target.addEventListener("targetFound", async () => {
+    targetDetectado = true;
+
+    if (!videoDesbloqueado) {
+      mensaje.textContent = "Toca una vez la pantalla";
       return;
     }
 
-    pantallaVideo.setAttribute("visible", true);
-    mensaje.style.display = "none";
+    try {
+      video.currentTime = 0;
+      await video.play();
+      mensaje.style.display = "none";
+    } catch (error) {
+      console.error("No se pudo reproducir el video:", error);
+    }
   });
 
   target.addEventListener("targetLost", () => {
-    pantallaVideo.setAttribute("visible", false);
+    targetDetectado = false;
 
-    if (videoIniciado) {
+    video.pause();
+    video.currentTime = 0;
+
+    if (videoDesbloqueado) {
       mensaje.style.display = "block";
       mensaje.textContent =
         "Apunta la cámara hacia la tarjeta de Alejandro";
