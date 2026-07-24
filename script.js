@@ -4,83 +4,36 @@
     const target = document.querySelector("#target");
     const video = document.querySelector("#videoAR");
     const mensaje = document.querySelector("#mensaje");
-    const startButton = document.querySelector("#startButton");
 
-    let experienciaIniciada = false;
-    let targetDetectado = false;
-
-    // Necesario para reproducción automática en celulares
     video.muted = true;
     video.playsInline = true;
 
-    startButton.addEventListener("click", async () => {
-      try {
-        /*
-          El video se reproduce una vez durante el toque del usuario.
-          Esto desbloquea la reproducción en el navegador.
-        */
-        await video.play();
-
-        video.pause();
-        video.currentTime = 0;
-
-        experienciaIniciada = true;
-
-        startButton.style.display = "none";
-        mensaje.textContent =
-          "Apunta la cámara hacia la tarjeta de Alejandro";
-
-        // Si la tarjeta ya estaba detectada, reproducimos el video
-        if (targetDetectado) {
-          await video.play();
-          mensaje.style.display = "none";
-        }
-      } catch (error) {
-        console.error("Error al habilitar el video:", error);
-
-        mensaje.textContent =
-          "No se pudo iniciar. Presiona nuevamente el botón.";
-      }
+    scene.addEventListener("arReady", () => {
+      mensaje.textContent =
+        "Apunta la cámara hacia la tarjeta de Alejandro";
     });
 
-    scene.addEventListener("arReady", () => {
-      if (!experienciaIniciada) {
-        mensaje.textContent =
-          "Presiona “Iniciar experiencia” para comenzar";
-      }
+    scene.addEventListener("arError", () => {
+      mensaje.textContent =
+        "No se pudo abrir la cámara. Revisa los permisos.";
     });
 
     target.addEventListener("targetFound", async () => {
-      targetDetectado = true;
-
-      if (!experienciaIniciada) {
-        mensaje.textContent =
-          "Presiona “Iniciar experiencia” para ver el video";
-        return;
-      }
+      mensaje.style.display = "none";
 
       try {
         await video.play();
-        mensaje.style.display = "none";
       } catch (error) {
-        console.error("Error al reproducir:", error);
-
-        mensaje.style.display = "block";
-        mensaje.textContent =
-          "Toca nuevamente “Iniciar experiencia”";
+        console.error("No se pudo reproducir el video:", error);
       }
     });
 
     target.addEventListener("targetLost", () => {
-      targetDetectado = false;
-
       video.pause();
 
-      if (experienciaIniciada) {
-        mensaje.style.display = "block";
-        mensaje.textContent =
-          "Apunta la cámara hacia la tarjeta de Alejandro";
-      }
+      mensaje.style.display = "block";
+      mensaje.textContent =
+        "Apunta la cámara hacia la tarjeta de Alejandro";
     });
   });
 </script>
