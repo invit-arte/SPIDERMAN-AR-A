@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Marvel Experience AR</title>
+
+  <!-- A-Frame -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+  <!-- MindAR para reconocimiento de imágenes -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    .mensaje {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      z-index: 10;
+      width: calc(100% - 40px);
+      max-width: 400px;
+      padding: 12px 18px;
+      transform: translateX(-50%);
+      color: white;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.75);
+      border-radius: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="mensaje">
+    Apunta la cámara hacia la tarjeta de Alejandro
+  </div>
+
+  <a-scene
+    embedded mindar-image="
+      imageTargetSrc: assets/targets.mind;
+      autoStart: true;
+      filterMinCF: 0.001;
+      filterBeta: 0.01;
+    "
+    color-space="sRGB"
+    renderer="colorManagement: true; physicallyCorrectLights: true;"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+  >
+
+ 
+
+    <a-camera
+      position="0 0 0"
+      look-controls="enabled: false"
+    ></a-camera>
+
+    <!-- targetIndex 0 corresponde a la primera imagen compilada -->
+    <a-entity mindar-image-target="targetIndex: 0">
+                <a-assets>
+        <video
+            id="videoAR"
+            src="assets/VIDEO.mp4"
+            preload="auto"
+            loop
+            muted
+            playsinline
+            webkit-playsinline
+        ></video>
+        </a-assets>
+      <!-- Rectángulo de prueba -->
+      <a-plane
+        color="#ff0000"
+        opacity="0.75"
+        position="0 0 0"
+        height="0.55"
+        width="1"
+      ></a-plane>
+
+    </a-entity>
+
+    <a-light
+  type="ambient"
+  intensity="1">
+</a-light>
+
+  </a-scene>
+
+  <script>
+  const target = document.querySelector(
+    '[mindar-image-target="targetIndex: 0"]'
+  );
+
+  const video = document.querySelector("#videoAR");
+
+  target.addEventListener("targetFound", () => {
+    video.play().catch((error) => {
+      console.log("El navegador bloqueó la reproducción:", error);
+    });
+  });
+
+  target.addEventListener("targetLost", () => {
+    video.pause();
+  });
+</script>
+
+</body>
+</html>
