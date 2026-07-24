@@ -1,39 +1,65 @@
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const scene = document.querySelector("a-scene");
-    const target = document.querySelector("#target");
-    const video = document.querySelector("#videoAR");
-    const mensaje = document.querySelector("#mensaje");
+  const target = document.querySelector("#target");
+  const video = document.querySelector("#videoAR");
+  const mensaje = document.querySelector("#mensaje");
+  const botonInvisible = document.querySelector("#botonInvisible");
 
-    video.muted = true;
-    video.playsInline = true;
+  let videoDesbloqueado = false;
+  let targetVisible = false;
 
-    scene.addEventListener("arReady", () => {
-      mensaje.textContent =
-        "Apunta la cámara hacia la tarjeta de Alejandro";
-    });
+  video.muted = true;
+  video.playsInline = true;
 
-    scene.addEventListener("arError", () => {
-      mensaje.textContent =
-        "No se pudo abrir la cámara. Revisa los permisos.";
-    });
-
-    target.addEventListener("targetFound", async () => {
-      mensaje.style.display = "none";
-
+  botonInvisible.addEventListener(
+    "click",
+    async () => {
       try {
         await video.play();
+
+        video.pause();
+        video.currentTime = 0;
+
+        videoDesbloqueado = true;
+        botonInvisible.style.display = "none";
+
+        mensaje.textContent =
+          "Apunta la cámara hacia la tarjeta de Alejandro";
+
+        if (targetVisible) {
+          await video.play();
+          mensaje.style.display = "none";
+        }
       } catch (error) {
-        console.error("No se pudo reproducir el video:", error);
+        console.error("No se pudo desbloquear el video:", error);
       }
-    });
+    },
+    { once: true }
+  );
 
-    target.addEventListener("targetLost", () => {
-      video.pause();
+  target.addEventListener("targetFound", async () => {
+    targetVisible = true;
 
+    if (!videoDesbloqueado) return;
+
+    try {
+      video.currentTime = 0;
+      await video.play();
+      mensaje.style.display = "none";
+    } catch (error) {
+      console.error("No se pudo reproducir el video:", error);
+    }
+  });
+
+  target.addEventListener("targetLost", () => {
+    targetVisible = false;
+    video.pause();
+
+    if (videoDesbloqueado) {
       mensaje.style.display = "block";
       mensaje.textContent =
         "Apunta la cámara hacia la tarjeta de Alejandro";
-    });
+    }
   });
+});
 </script>
